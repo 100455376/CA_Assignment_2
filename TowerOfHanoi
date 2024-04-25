@@ -20,4 +20,48 @@ jalr    x0,     0(x1)        # End of the program code
 # Assignment 2: Functions #
 ###########################
 TowerOfHanoi:
-jalr    x0,     0(x1)
+    # Store frame pointer and return address on the stack
+    addi    x2, x2, -16         # Adjust stack pointer to make room for 2 saved registers
+    sd      x8, 0(x2)           # Save old frame pointer
+    sd      x1, -8(x2)          # Save return address
+
+    # Check for base case: if n == 1, move disk from source to destination
+    li      t0, 1
+    beq     x10, t0, move_disk
+
+    # Recursive case
+    # Step 1: Move n-1 disks from source to auxiliary
+    addi    x10, x10, -1        # Decrease disk count by 1
+    mv      t1, x12             # Save destination rod temporarily
+    mv      x12, x13            # Set auxiliary rod as new destination
+    mv      x13, t1             # Set old destination as new auxiliary
+    jal     x1, TowerOfHanoi    # Recursive call: TowerOfHanoi(n-1, A, B, C)
+
+    # Step 2: Move nth disk from source to destination, which is handled by `move_disk` label
+move_disk:
+    # (Implement disk moving logic here, this part is placeholder)
+    # In a real implementation, this would involve updating the rod arrays A, B, and C
+
+    # Step 3: Move n-1 disks from auxiliary to destination
+    # Prepare arguments for recursive call
+    mv      t1, x11             # Save source rod temporarily
+    mv      x11, x13            # Set auxiliary rod as new source
+    mv      x13, t1             # Set old source as new auxiliary
+    jal     x1, TowerOfHanoi    # Recursive call: TowerOfHanoi(n-1, B, C, A)
+
+    # Restore frame pointer and return address, then return
+    ld      x1, -8(x2)          # Restore return address
+    ld      x8, 0(x2)           # Restore frame pointer
+    addi    x2, x2, 16          # Adjust stack pointer back
+    jalr    x0, 0(x1)           # Return from function
+
+# Data section for rods
+.data
+rodA: .space 12  # Allocate space for disks, assuming each disk is 4 bytes
+rodB: .space 12
+rodC: .space 12
+
+jalr    x0,     0(x1) # USUALLY THE LAST INSTRUCTION IN FUNCTION
+
+# Recursive Tower of Hanoi function
+# Arguments: number of disks (x10), source rod (x11), destination rod (x12), auxiliary rod (x13)
