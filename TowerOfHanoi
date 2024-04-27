@@ -41,11 +41,12 @@ TowerOfHanoi:
 
     # Prepare for recursive call for TowerOfHanoi(n-1, from, aux, to)
     addi    x10, x10, -1        # Decrement n for the recursive call
-    mv      x1, x11             # Move current 'from' to 'to' for recursive call
-    mv      x11, x13            # Move current 'aux' to 'from'
-    mv      x13, x12            # Move current 'to' to 'aux'
-    mv      x12, x1             # Restore 'to' for recursive call
+    add     x1, x11, x0         # Move current 'from' to 'to' for recursive call
+    add     x11, x13, x0        # Move current 'aux' to 'from'
+    add     x13, x12, x0        # Move current 'to' to 'aux'
+    add     x12, x1, x0         # Restore 'to' for recursive call
     jal     x1, TowerOfHanoi    # Recursive call TowerOfHanoi(n-1, from, aux, to)
+
 
     # Move the disk from 'from' to 'to'
     ld      x5, 0(x11)          # Load from[0] into x5
@@ -61,11 +62,12 @@ TowerOfHanoi:
     # Recursive call for TowerOfHanoi(n-1, aux, to, from)
     ld      x10, 40(x2)         # Reload n
     addi    x10, x10, -1        # Decrement n
-    mv      x1, x13             # Move current 'aux' to 'from'
-    mv      x13, x11            # Move current 'from' to 'aux'
-    mv      x11, x12            # Move current 'to' to 'from'
-    mv      x12, x1             # Restore 'to'
+    add     x1, x13, x0         # Move current 'aux' to 'from'
+    add     x13, x11, x0        # Move current 'from' to 'aux'
+    add     x11, x12, x0        # Move current 'to' to 'from'
+    add     x12, x1, x0         # Restore 'to'
     jal     x1, TowerOfHanoi    # Recursive call TowerOfHanoi(n-1, aux, to, from)
+
 
 end_recursive:
     # Restore argument registers and frame pointer
