@@ -20,48 +20,65 @@ jalr    x0,     0(x1)        # End of the program code
 # Assignment 2: Functions #
 ###########################
 TowerOfHanoi:
-    # Store frame pointer and return address on the stack
-    addi    x2, x2, -16         # Adjust stack pointer to make room for 2 saved registers
-    sd      x8, 0(x2)           # Save old frame pointer
-    sd      x1, -8(x2)          # Save return address
+    # Setup stack frame
+    addi    x2, x2, -64         # Allocate stack space
+    sd      x1, 56(x2)          # Save return address
+    sd      x8, 48(x2)          # Save frame pointer
+    addi    x8, x2, 64          # Set new frame pointer
 
-    # Check for base case: if n == 1, move disk from source to destination
-    li      t0, 1
-    beq     x10, t0, move_disk
+    # Save argument registers
+    sd      x10, 40(x2)         # Save n
+    sd      x11, 32(x2)         # Save from
+    sd      x12, 24(x2)         # Save to
+    sd      x13, 16(x2)         # Save aux
 
-    # Recursive case
-    # Step 1: Move n-1 disks from source to auxiliary
-    addi    x10, x10, -1        # Decrease disk count by 1
-    mv      t1, x12             # Save destination rod temporarily
-    mv      x12, x13            # Set auxiliary rod as new destination
-    mv      x13, t1             # Set old destination as new auxiliary
-    jal     x1, TowerOfHanoi    # Recursive call: TowerOfHanoi(n-1, A, B, C)
+    # Save callee-saved registers (according to the assignment's specification)
+    sd      x18, 0(x2)
+    # Continue saving x19 through x27 if they will be used in this function
 
-    # Step 2: Move nth disk from source to destination, which is handled by `move_disk` label
-move_disk:
-    # (Implement disk moving logic here, this part is placeholder)
-    # In a real implementation, this would involve updating the rod arrays A, B, and C
+    # Base case check
+    beq     x10, x0, end_recursive
 
-    # Step 3: Move n-1 disks from auxiliary to destination
-    # Prepare arguments for recursive call
-    mv      t1, x11             # Save source rod temporarily
-    mv      x11, x13            # Set auxiliary rod as new source
-    mv      x13, t1             # Set old source as new auxiliary
-    jal     x1, TowerOfHanoi    # Recursive call: TowerOfHanoi(n-1, B, C, A)
+    # Prepare for recursive call for TowerOfHanoi(n-1, from, aux, to)
+    addi    x10, x10, -1        # Decrement n for the recursive call
+    mv      x1, x11             # Move current 'from' to 'to' for recursive call
+    mv      x11, x13            # Move current 'aux' to 'from'
+    mv      x13, x12            # Move current 'to' to 'aux'
+    mv      x12, x1             # Restore 'to' for recursive call
+    jal     x1, TowerOfHanoi    # Recursive call TowerOfHanoi(n-1, from, aux, to)
 
-    # Restore frame pointer and return address, then return
-    ld      x1, -8(x2)          # Restore return address
-    ld      x8, 0(x2)           # Restore frame pointer
-    addi    x2, x2, 16          # Adjust stack pointer back
+    # Move the disk from 'from' to 'to'
+    ld      x5, 0(x11)          # Load from[0] into x5
+    ld      x6, 0(x12)          # Load to[0] into x6
+    addi    x6, x6, 1           # Increment to[0]
+    add     x6, x6, x20         # Calculate address to store disk
+    add     x5, x5, x18         # Calculate address to load disk
+    ld      x7, 0(x5)           # Load the disk from 'from'
+    sd      x7, 0(x6)           # Store the disk to 'to'
+    sd      x6, 0(x12)          # Update to[0]
+    addi    x9, x9, 1           # Increment num_moves
+
+    # Recursive call for TowerOfHanoi(n-1, aux, to, from)
+    ld      x10, 40(x2)         # Reload n
+    addi    x10, x10, -1        # Decrement n
+    mv      x1, x13             # Move current 'aux' to 'from'
+    mv      x13, x11            # Move current 'from' to 'aux'
+    mv      x11, x12            # Move current 'to' to 'from'
+    mv      x12, x1             # Restore 'to'
+    jal     x1, TowerOfHanoi    # Recursive call TowerOfHanoi(n-1, aux, to, from)
+
+end_recursive:
+    # Restore argument registers and frame pointer
+    ld      x10, 40(x2)
+    ld      x11, 32(x2)
+    ld      x12, 24(x2)
+    ld      x13, 16(x2)
+
+    # Restore callee-saved registers (according to the assignment's specification)
+    ld      x18, 0(x2)
+    # Continue restoring x19 through x27 if they were saved earlier
+
+    ld      x8, 48(x2)          # Restore frame pointer
+    ld      x1, 56(x2)          # Restore return address
+    addi    x2, x2, 64          # Deallocate stack space
     jalr    x0, 0(x1)           # Return from function
-
-# Data section for rods
-.data
-rodA: .space 12  # Allocate space for disks, assuming each disk is 4 bytes
-rodB: .space 12
-rodC: .space 12
-
-jalr    x0,     0(x1) # USUALLY THE LAST INSTRUCTION IN FUNCTION
-
-# Recursive Tower of Hanoi function
-# Arguments: number of disks (x10), source rod (x11), destination rod (x12), auxiliary rod (x13)
