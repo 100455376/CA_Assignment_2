@@ -1,0 +1,30 @@
+main:
+addi    x2,     x2,     -16   # Set the stack pointer.
+sd      x8,     0(x2)         # Store the frame pointer.
+addi    x8,     x2,      16   # Set the frame pointer.
+sd      x1,     -8(x8)        # Store the return address.
+ld      x10,    0(x18)        # x10 = n
+
+add     x11,    x18,     x0   # x11 = A
+add     x12,    x20,     x0   # x12 = C
+add     x13,    x19,     x0   # x13 = B
+jal     x1,     TowerOfHanoi  # TowerOfHanoi(n, A, C, B)
+
+ld      x1,     -8(x8)       # Restore the return address.
+ld      x8,     0(x2)        # Restore the frame pointer.
+addi    x2,     x2,     16   # Restore the stack pointer.
+add     x10,    x0,     x0   # return 0 at the end of main
+jalr    x0,     0(x1)        # End of the program code
+
+###########################
+# Assignment 2: Functions #
+###########################
+# TowerOfHanoi Function (Recursive)
+# Assuming that x10 = n, x11 = A, x12 = C, x13 = B initially passed
+TowerOfHanoi:
+    # Base case check: if n == 0, return
+    beq x10, x0, EndRecursion   # if n == 0, skip the recursive operations
+    
+    
+EndRecursion:
+    jalr x0, 0(x1)                        # Return from the function
