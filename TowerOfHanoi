@@ -59,4 +59,4 @@ TowerOfHanoi:
     jal x1, TowerOfHanoi         # Recursive Call
 
 ExitRecursion:
-    jr x1                        # Return from the function
+    jalr x0, 0(x1)                        # Return from the function
